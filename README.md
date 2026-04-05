@@ -19,6 +19,7 @@
     <a href="#good-fits">Good Fits</a> ·
     <a href="#weaker-fits">Weaker Fits</a> ·
     <a href="#runtime-semantics">Runtime Semantics</a> ·
+    <a href="#documentation">Documentation</a> ·
     <a href="#testing">Testing</a>
   </p>
 </div>
@@ -95,6 +96,12 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - retries happen immediately in `0.1.0`
 - `CancellationError` is terminal and is rethrown without additional attempts
 - all non-cancellation thrown errors are retried until attempts are exhausted
+
+## Documentation
+
+The package now includes a DocC catalog in `Sources/ResilienceKit/ResilienceKit.docc`.
+
+Once Swift Package Index processes `.spi.yml`, hosted documentation should appear on the package page automatically.
 
 ## Testing
 

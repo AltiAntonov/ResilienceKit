@@ -1,30 +1,66 @@
-# ResilienceKit
+<div align="center">
+  <h1>ResilienceKit</h1>
+  <p><strong>Small async retry primitives for Swift with explicit attempts and terminal cancellation.</strong></p>
+  <p>
+    <a href="https://swiftpackageindex.com/AltiAntonov/ResilienceKit">
+      <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FAltiAntonov%2FResilienceKit%2Fbadge%3Ftype%3Dswift-versions" alt="Swift version compatibility">
+    </a>
+    <a href="https://swiftpackageindex.com/AltiAntonov/ResilienceKit">
+      <img src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FAltiAntonov%2FResilienceKit%2Fbadge%3Ftype%3Dplatforms" alt="Platform compatibility">
+    </a>
+    <img src="https://img.shields.io/badge/License-MIT-34C759" alt="MIT License">
+    <a href="https://github.com/AltiAntonov/ResilienceKit/actions/workflows/swift.yml"><img src="https://github.com/AltiAntonov/ResilienceKit/actions/workflows/swift.yml/badge.svg" alt="Swift workflow"></a>
+  </p>
+  <p>
+    <a href="#features">Features</a> ·
+    <a href="#installation">Installation</a> ·
+    <a href="#quick-start">Quick Start</a> ·
+    <a href="#when-to-use">When To Use</a> ·
+    <a href="#good-fits">Good Fits</a> ·
+    <a href="#weaker-fits">Weaker Fits</a> ·
+    <a href="#runtime-semantics">Runtime Semantics</a> ·
+    <a href="#testing">Testing</a>
+  </p>
+</div>
 
-`ResilienceKit` is a small Swift package for retrying async throwing work with a compact fluent API.
+## Features
 
-## Current Scope
+- async-first retry entry point with `Retry { ... }`
+- explicit `.maxAttempts(_:)` configuration
+- immediate retries for `0.1.0`
+- terminal cancellation that is not retried
+- small surface area intended to grow in layers
 
-Version `0.1.0` ships one public type:
+The current public API is intentionally centered on:
+
+- `Retry`
+
+## Installation
+
+Add `ResilienceKit` to your Swift Package Manager dependencies:
 
 ```swift
-Retry { ... }
+dependencies: [
+    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.1.0")
+]
 ```
 
-Available behavior:
-
-- `.maxAttempts(_:)` to set the number of attempts; values below `1` are clamped to `1`
-- `.run()` to execute the operation
-- immediate retries only
-- cancellation is terminal and is not retried
-
-## Platform Support
-
-- iOS 17 minimum
-- macOS 14 minimum
-
-## Example
+Then add the product to your target:
 
 ```swift
+.target(
+    name: "YourApp",
+    dependencies: [
+        .product(name: "ResilienceKit", package: "ResilienceKit")
+    ]
+)
+```
+
+## Quick Start
+
+```swift
+import ResilienceKit
+
 let value = try await Retry {
     try await fetchProfile()
 }
@@ -32,6 +68,42 @@ let value = try await Retry {
 .run()
 ```
 
-## Coming Next
+## When To Use
 
-Planned follow-up releases will add delay, backoff, and jitter policies. Those are not part of `0.1.0`.
+Use `ResilienceKit` when you want retry behavior to be explicit, readable, and reusable instead of re-implementing ad hoc retry loops around async work.
+
+It is a strong fit when the first thing you need is a small retry primitive, not a full resilience framework.
+
+## Good Fits
+
+- app and SDK code that wraps async network requests
+- codebases that want one obvious retry call site instead of repeated `for` loops
+- teams that want to add backoff and jitter later without changing the entry-point shape
+- small packages or apps that want focused retry behavior without unrelated dependencies
+
+## Weaker Fits
+
+- projects that need delay, backoff, jitter, or retry predicates today
+- systems that already require a broader resilience stack such as circuit breaking or rate limiting
+- sync-only code paths
+- packages that need broad platform coverage below iOS 17 or macOS 14 right now
+
+## Runtime Semantics
+
+- `.maxAttempts(_:)` controls the total number of attempts, not retries-after-the-first
+- values below `1` are clamped to `1`
+- retries happen immediately in `0.1.0`
+- `CancellationError` is terminal and is rethrown without additional attempts
+- all non-cancellation thrown errors are retried until attempts are exhausted
+
+## Testing
+
+The package uses Swift Testing.
+
+Current coverage verifies:
+
+- first-attempt success
+- retry-until-success behavior
+- exact call count on persistent failure
+- clamp behavior for invalid attempt counts
+- terminal cancellation from both pre-cancelled tasks and thrown `CancellationError`

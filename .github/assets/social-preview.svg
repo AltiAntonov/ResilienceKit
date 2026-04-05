@@ -30,10 +30,10 @@
   <rect x="368" y="434" width="160" height="18" rx="9" fill="#1E293B"/>
   <rect x="548" y="434" width="194" height="18" rx="9" fill="#1E293B"/>
 
-  <text x="640" y="274" text-anchor="middle" fill="#F8FAFC" font-size="76" font-weight="700" font-family="Helvetica, Arial, sans-serif">ResilienceKit</text>
-  <text x="640" y="332" text-anchor="middle" fill="#CBD5E1" font-size="28" font-weight="500" font-family="Helvetica, Arial, sans-serif">Small async retry primitives with explicit attempts and terminal cancellation.</text>
+  <text x="640" y="270" text-anchor="middle" fill="#F8FAFC" font-size="52" font-weight="700" font-family="Helvetica, Arial, sans-serif">ResilienceKit</text>
+  <text x="640" y="320" text-anchor="middle" fill="#CBD5E1" font-size="19" font-weight="500" font-family="Helvetica, Arial, sans-serif">Small async retry primitives with explicit attempts and terminal cancellation.</text>
 
   <rect x="382" y="378" width="516" height="4" rx="2" fill="url(#accent)"/>
 
-  <text x="640" y="486" text-anchor="middle" fill="#94A3B8" font-size="24" font-weight="500" font-family="Helvetica, Arial, sans-serif">Swift Package • iOS 17+ • macOS 14+</text>
+  <text x="640" y="476" text-anchor="middle" fill="#94A3B8" font-size="18" font-weight="500" font-family="Helvetica, Arial, sans-serif">Swift Package • iOS 17+ • macOS 14+</text>
 </svg>

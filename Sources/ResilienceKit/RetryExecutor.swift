@@ -1,3 +1,12 @@
+//
+//  RetryExecutor.swift
+//  ResilienceKit
+//
+//  Runs retry attempts and enforces terminal cancellation behavior.
+//  Copyright (c) 2026 Altimir Antonov.
+//  Licensed under the MIT License. See LICENSE for details.
+//
+
 package struct RetryExecutor: Sendable {
     package init() {}
 

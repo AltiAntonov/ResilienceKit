@@ -1,3 +1,12 @@
+//
+//  RetryConfigurationTests.swift
+//  ResilienceKitTests
+//
+//  Verifies retry configuration defaults and attempt-count clamping.
+//  Copyright (c) 2026 Altimir Antonov.
+//  Licensed under the MIT License. See LICENSE for details.
+//
+
 import Testing
 @testable import ResilienceKit
 

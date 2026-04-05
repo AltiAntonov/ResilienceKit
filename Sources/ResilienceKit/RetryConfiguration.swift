@@ -1,3 +1,12 @@
+//
+//  RetryConfiguration.swift
+//  ResilienceKit
+//
+//  Stores internal retry configuration values for execution.
+//  Copyright (c) 2026 Altimir Antonov.
+//  Licensed under the MIT License. See LICENSE for details.
+//
+
 package struct RetryConfiguration: Sendable, Equatable {
     package let maxAttempts: Int
 

@@ -1,3 +1,12 @@
+//
+//  Retry.swift
+//  ResilienceKit
+//
+//  Defines the public retry entry point and fluent configuration surface.
+//  Copyright (c) 2026 Altimir Antonov.
+//  Licensed under the MIT License. See LICENSE for details.
+//
+
 public struct Retry<Output>: Sendable {
     let operation: @Sendable () async throws -> Output
     let configuration: RetryConfiguration

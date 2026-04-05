@@ -1,3 +1,12 @@
+//
+//  RetryBasicTests.swift
+//  ResilienceKitTests
+//
+//  Verifies first-release retry execution and cancellation behavior.
+//  Copyright (c) 2026 Altimir Antonov.
+//  Licensed under the MIT License. See LICENSE for details.
+//
+
 import Testing
 @testable import ResilienceKit
 

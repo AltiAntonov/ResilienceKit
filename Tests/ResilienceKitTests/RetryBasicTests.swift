@@ -1,0 +1,147 @@
+import Testing
+@testable import ResilienceKit
+
+actor Counter {
+    private var value = 0
+
+    func increment() -> Int {
+        value += 1
+        return value
+    }
+
+    func currentValue() -> Int {
+        value
+    }
+}
+
+enum SampleError: Error, Equatable {
+    case transient
+    case permanent
+}
+
+@Test
+func runReturnsSuccessfulValueOnFirstAttempt() async throws {
+    let counter = Counter()
+
+    let result = try await Retry {
+        _ = await counter.increment()
+        return 42
+    }
+    .run()
+
+    #expect(result == 42)
+    #expect(await counter.currentValue() == 1)
+}
+
+@Test
+func runThrowsCancellationErrorWithoutInvokingOperationWhenTaskIsAlreadyCancelled() async throws {
+    actor InvocationCounter {
+        private var value = 0
+
+        func increment() {
+            value += 1
+        }
+
+        func currentValue() -> Int {
+            value
+        }
+    }
+
+    let counter = InvocationCounter()
+
+    enum Outcome {
+        case cancelled
+        case unexpectedSuccess
+        case failed(Error)
+    }
+
+    let outcome = await Task.detached { () -> Outcome in
+        withUnsafeCurrentTask { $0?.cancel() }
+
+        do {
+            _ = try await Retry {
+                await counter.increment()
+                return 1
+            }
+            .maxAttempts(3)
+            .run()
+
+            return .unexpectedSuccess
+        } catch is CancellationError {
+            return .cancelled
+        } catch {
+            return .failed(error)
+        }
+    }.value
+
+    switch outcome {
+    case .cancelled:
+        break
+    case .unexpectedSuccess:
+        Issue.record("Expected Retry.run() to throw when the task is already cancelled")
+    case .failed(let error):
+        Issue.record("Expected CancellationError, got \(error)")
+    }
+
+    #expect(await counter.currentValue() == 0)
+}
+
+@Test
+func runRetriesUntilOperationSucceeds() async throws {
+    let counter = Counter()
+
+    let result = try await Retry {
+        let attempt = await counter.increment()
+        if attempt < 3 {
+            throw SampleError.transient
+        }
+
+        return 99
+    }
+    .maxAttempts(5)
+    .run()
+
+    #expect(result == 99)
+    #expect(await counter.currentValue() == 3)
+}
+
+@Test
+func runInvokesOperationExactlyConfiguredNumberOfTimesOnPersistentFailure() async throws {
+    let counter = Counter()
+
+    do {
+        _ = try await Retry {
+            _ = await counter.increment()
+            throw SampleError.permanent
+        }
+        .maxAttempts(4)
+        .run()
+
+        Issue.record("Expected Retry.run() to throw after exhausting attempts")
+    } catch let error as SampleError {
+        #expect(error == .permanent)
+    }
+
+    #expect(await counter.currentValue() == 4)
+}
+
+@Test
+func runRethrowsCancellationWithoutRetrying() async throws {
+    let counter = Counter()
+
+    do {
+        _ = try await Retry {
+            _ = await counter.increment()
+            throw CancellationError()
+        }
+        .maxAttempts(5)
+        .run()
+
+        Issue.record("Expected Retry.run() to rethrow cancellation")
+    } catch is CancellationError {
+    } catch {
+        Issue.record("Expected CancellationError, got \(error)")
+    }
+
+    #expect(await counter.currentValue() == 1)
+}

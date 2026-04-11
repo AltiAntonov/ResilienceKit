@@ -2,6 +2,13 @@
 
 All notable changes to `ResilienceKit` will be documented in this file.
 
+## 0.1.1
+
+- Clarified public documentation around total attempts vs retries
+- Added public API doc comments for `Retry`, `.maxAttempts(_:)`, and `.run()`
+- Simplified retry executor terminal control flow by removing the forced unwrap fallback
+- Aligned release notes and planning metadata with the shipped `0.1.0` baseline
+
 ## 0.1.0
 
 Initial release.

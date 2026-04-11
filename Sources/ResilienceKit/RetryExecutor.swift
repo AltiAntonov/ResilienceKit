@@ -14,8 +14,6 @@ package struct RetryExecutor: Sendable {
         configuration: RetryConfiguration,
         operation: @escaping @Sendable () async throws -> Output
     ) async throws -> Output {
-        var lastError: Error?
-
         for attempt in 1...configuration.maxAttempts {
             if Task.isCancelled {
                 throw CancellationError()
@@ -26,14 +24,12 @@ package struct RetryExecutor: Sendable {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
-                lastError = error
-
                 if attempt == configuration.maxAttempts {
                     throw error
                 }
             }
         }
 
-        throw lastError!
+        preconditionFailure("RetryExecutor exhausted control flow unexpectedly.")
     }
 }

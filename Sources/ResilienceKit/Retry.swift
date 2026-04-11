@@ -7,10 +7,12 @@
 //  Licensed under the MIT License. See LICENSE for details.
 //
 
+/// Executes async throwing work with an explicit retry configuration.
 public struct Retry<Output>: Sendable {
     let operation: @Sendable () async throws -> Output
     let configuration: RetryConfiguration
 
+    /// Creates a retry wrapper around an async throwing operation.
     public init(
         _ operation: @escaping @Sendable () async throws -> Output
     ) {
@@ -18,6 +20,9 @@ public struct Retry<Output>: Sendable {
         self.configuration = RetryConfiguration()
     }
 
+    /// Sets the total number of attempts, including the first execution.
+    ///
+    /// Values below `1` are clamped to `1`.
     public func maxAttempts(_ value: Int) -> Self {
         return Self(
             operation: operation,
@@ -25,6 +30,9 @@ public struct Retry<Output>: Sendable {
         )
     }
 
+    /// Runs the wrapped operation using the current retry configuration.
+    ///
+    /// In `0.1.x`, retries happen immediately with no delay or backoff.
     public func run() async throws -> Output {
         try await RetryExecutor().run(
             configuration: configuration,

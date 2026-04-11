@@ -28,7 +28,7 @@
 
 - async-first retry entry point with `Retry { ... }`
 - explicit `.maxAttempts(_:)` configuration
-- immediate retries for `0.1.0`
+- immediate retries for `0.1.x`
 - terminal cancellation that is not retried
 - small surface area intended to grow in layers
 
@@ -69,6 +69,8 @@ let value = try await Retry {
 .run()
 ```
 
+`maxAttempts(_:)` always means total executions, including the first call.
+
 ## When To Use
 
 Use `ResilienceKit` when you want retry behavior to be explicit, readable, and reusable instead of re-implementing ad hoc retry loops around async work.
@@ -93,9 +95,11 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 
 - `.maxAttempts(_:)` controls the total number of attempts, not retries-after-the-first
 - values below `1` are clamped to `1`
-- retries happen immediately in `0.1.0`
+- retries happen immediately in `0.1.x`
 - `CancellationError` is terminal and is rethrown without additional attempts
 - all non-cancellation thrown errors are retried until attempts are exhausted
+
+Delay, backoff, jitter, and retry predicates are intentionally deferred to later releases.
 
 ## Documentation
 

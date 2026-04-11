@@ -33,11 +33,12 @@ let result = try await Retry {
 
 ## Failure behavior
 
-In `0.1.0`, retries happen immediately:
+In `0.1.x`, retries happen immediately:
 
 - if an attempt succeeds, `run()` returns that value immediately
 - if all attempts fail, `run()` throws the final error
 - if the work throws `CancellationError`, `run()` rethrows it without retrying
+- delay, backoff, jitter, and retry predicates are intentionally deferred to later releases
 
 ## Next steps
 

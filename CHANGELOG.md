@@ -2,6 +2,13 @@
 
 All notable changes to `ResilienceKit` will be documented in this file.
 
+## 0.2.0
+
+- Added `.delay(_:)` for fixed delay between failed retry attempts
+- Kept the first attempt immediate and skipped trailing delay after the final failure
+- Rethrow `CancellationError` if cancellation happens during delay
+- Added tests and documentation for delayed retry behavior
+
 ## 0.1.1
 
 - Clarified public documentation around total attempts vs retries

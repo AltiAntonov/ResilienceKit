@@ -27,6 +27,10 @@ package struct RetryExecutor: Sendable {
                 if attempt == configuration.maxAttempts {
                     throw error
                 }
+
+                if configuration.delay > .zero {
+                    try await Task.sleep(for: configuration.delay)
+                }
             }
         }
 

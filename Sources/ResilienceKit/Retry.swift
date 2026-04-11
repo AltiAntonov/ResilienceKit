@@ -30,6 +30,16 @@ public struct Retry<Output>: Sendable {
         )
     }
 
+    /// Sets the fixed delay between failed attempts.
+    ///
+    /// Values below `.zero` are clamped to `.zero`.
+    public func delay(_ value: Duration) -> Self {
+        return Self(
+            operation: operation,
+            configuration: configuration.updatingDelay(value)
+        )
+    }
+
     /// Runs the wrapped operation using the current retry configuration.
     ///
     /// In `0.1.x`, retries happen immediately with no delay or backoff.

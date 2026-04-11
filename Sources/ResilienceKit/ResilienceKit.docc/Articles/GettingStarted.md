@@ -31,14 +31,29 @@ let result = try await Retry {
 
 `maxAttempts(_:)` controls the total number of attempts, including the first call. Values below `1` are clamped to `1`.
 
+## Add fixed delay between retries
+
+```swift
+let result = try await Retry {
+    try await fetchProfile()
+}
+.maxAttempts(3)
+.delay(.seconds(1))
+.run()
+```
+
+`delay(_:)` sets a fixed delay between failed attempts. The first attempt still starts immediately.
+
 ## Failure behavior
 
-In `0.1.x`, retries happen immediately:
+In `0.2.0`, retry timing works like this:
 
 - if an attempt succeeds, `run()` returns that value immediately
-- if all attempts fail, `run()` throws the final error
+- if an attempt fails and another attempt remains, `run()` waits for the configured delay before retrying
+- if all attempts fail, `run()` throws the final error without an extra trailing delay
 - if the work throws `CancellationError`, `run()` rethrows it without retrying
-- delay, backoff, jitter, and retry predicates are intentionally deferred to later releases
+- if the task is cancelled during delay, `run()` rethrows `CancellationError`
+- backoff, jitter, and retry predicates are intentionally deferred to later releases
 
 ## Next steps
 

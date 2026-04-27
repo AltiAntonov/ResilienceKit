@@ -2,6 +2,13 @@
 
 All notable changes to `ResilienceKit` will be documented in this file.
 
+## 0.2.1
+
+- Hardened retry cancellation checks with `Task.checkCancellation()`
+- Added coverage for cancellation after a failed attempt before the next retry
+- Clarified cancellation guarantees in README and DocC
+- Kept the public API unchanged
+
 ## 0.2.0
 
 - Added `.delay(_:)` for fixed delay between failed retry attempts

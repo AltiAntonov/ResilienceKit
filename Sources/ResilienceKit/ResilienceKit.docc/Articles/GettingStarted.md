@@ -46,13 +46,15 @@ let result = try await Retry {
 
 ## Failure behavior
 
-In `0.2.0`, retry timing works like this:
+In `0.2.1`, retry timing works like this:
 
 - if an attempt succeeds, `run()` returns that value immediately
 - if an attempt fails and another attempt remains, `run()` waits for the configured delay before retrying
 - if all attempts fail, `run()` throws the final error without an extra trailing delay
+- if the task is cancelled before the first attempt, the operation is not run
 - if the work throws `CancellationError`, `run()` rethrows it without retrying
 - if the task is cancelled during delay, `run()` rethrows `CancellationError`
+- no additional attempt runs after cancellation
 - backoff, jitter, and retry predicates are intentionally deferred to later releases
 
 ## Next steps

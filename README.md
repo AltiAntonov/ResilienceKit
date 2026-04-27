@@ -42,7 +42,7 @@ Add `ResilienceKit` to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.1.0")
+    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.2.1")
 ]
 ```
 
@@ -99,7 +99,9 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - `.delay(_:)` configures a fixed delay between failed attempts and defaults to `.zero`
 - the first attempt always starts immediately
 - delay is applied only between eligible retries, never after the final failed attempt
+- cancellation before the first attempt prevents the operation from running
 - `CancellationError` is terminal and is rethrown without additional attempts
+- cancellation during delay is rethrown and no later attempt runs
 - all non-cancellation thrown errors are retried until attempts are exhausted
 
 Backoff, jitter, and retry predicates are intentionally deferred to later releases.

@@ -208,6 +208,46 @@ func runRethrowsCancellationWithoutRetrying() async throws {
 }
 
 @Test
+func runStopsBeforeNextAttemptWhenTaskIsCancelledAfterFailure() async throws {
+    let counter = Counter()
+
+    enum Outcome {
+        case cancelled
+        case unexpectedSuccess
+        case failed(Error)
+    }
+
+    let outcome = await Task { () -> Outcome in
+        do {
+            _ = try await Retry {
+                _ = await counter.increment()
+                withUnsafeCurrentTask { $0?.cancel() }
+                throw SampleError.transient
+            }
+            .maxAttempts(3)
+            .run()
+
+            return .unexpectedSuccess
+        } catch is CancellationError {
+            return .cancelled
+        } catch {
+            return .failed(error)
+        }
+    }.value
+
+    switch outcome {
+    case .cancelled:
+        break
+    case .unexpectedSuccess:
+        Issue.record("Expected Retry.run() to stop after task cancellation")
+    case .failed(let error):
+        Issue.record("Expected CancellationError, got \(error)")
+    }
+
+    #expect(await counter.currentValue() == 1)
+}
+
+@Test
 func runRethrowsCancellationDuringConfiguredDelayWithoutRetryingAgain() async throws {
     let counter = Counter()
 

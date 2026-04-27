@@ -15,9 +15,7 @@ package struct RetryExecutor: Sendable {
         operation: @escaping @Sendable () async throws -> Output
     ) async throws -> Output {
         for attempt in 1...configuration.maxAttempts {
-            if Task.isCancelled {
-                throw CancellationError()
-            }
+            try Task.checkCancellation()
 
             do {
                 return try await operation()

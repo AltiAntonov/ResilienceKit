@@ -42,7 +42,8 @@ public struct Retry<Output>: Sendable {
 
     /// Runs the wrapped operation using the current retry configuration.
     ///
-    /// In `0.1.x`, retries happen immediately with no delay or backoff.
+    /// Cancellation is terminal. If `delay(_:)` is configured, cancellation
+    /// during delay is rethrown without running another attempt.
     public func run() async throws -> Output {
         try await RetryExecutor().run(
             configuration: configuration,

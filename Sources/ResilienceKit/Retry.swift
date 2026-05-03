@@ -40,6 +40,30 @@ public struct Retry<Output>: Sendable {
         )
     }
 
+    /// Sets an exponential backoff delay between failed attempts.
+    ///
+    /// - Parameters:
+    ///   - baseDelay: The first retry delay.
+    ///   - multiplier: The growth factor applied after each failed attempt.
+    ///   - maxDelay: An optional cap for computed delays.
+    ///   - jitter: A bounded random adjustment applied to computed delays.
+    public func exponentialBackoff(
+        baseDelay: Duration,
+        multiplier: Double = 2,
+        maxDelay: Duration? = nil,
+        jitter: RetryJitter = .none
+    ) -> Self {
+        return Self(
+            operation: operation,
+            configuration: configuration.updatingExponentialBackoff(
+                baseDelay: baseDelay,
+                multiplier: multiplier,
+                maxDelay: maxDelay,
+                jitter: jitter
+            )
+        )
+    }
+
     /// Runs the wrapped operation using the current retry configuration.
     ///
     /// Cancellation is terminal. If `delay(_:)` is configured, cancellation

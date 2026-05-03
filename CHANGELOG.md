@@ -2,6 +2,14 @@
 
 All notable changes to `ResilienceKit` will be documented in this file.
 
+## 0.3.0
+
+- Added `.exponentialBackoff(baseDelay:multiplier:maxDelay:jitter:)`
+- Added `RetryJitter` for bounded jitter on exponential backoff delays
+- Preserved fixed delay support through `.delay(_:)`
+- Added tests for deterministic backoff progression and jitter bounds
+- Updated README and DocC examples for backoff and jitter
+
 ## 0.2.1
 
 - Hardened retry cancellation checks with `Task.checkCancellation()`

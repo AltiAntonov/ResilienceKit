@@ -29,6 +29,7 @@
 - async-first retry entry point with `Retry { ... }`
 - explicit `.maxAttempts(_:)` configuration
 - fixed delay support through `.delay(_:)`
+- exponential backoff and bounded jitter
 - terminal cancellation that is not retried
 - small surface area intended to grow in layers
 
@@ -42,7 +43,7 @@ Add `ResilienceKit` to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.2.1")
+    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.3.0")
 ]
 ```
 
@@ -65,8 +66,13 @@ import ResilienceKit
 let value = try await Retry {
     try await fetchProfile()
 }
-.maxAttempts(3)
-.delay(.seconds(1))
+.maxAttempts(4)
+.exponentialBackoff(
+    baseDelay: .milliseconds(250),
+    multiplier: 2,
+    maxDelay: .seconds(5),
+    jitter: .fraction(0.2)
+)
 .run()
 ```
 
@@ -82,12 +88,12 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 
 - app and SDK code that wraps async network requests
 - codebases that want one obvious retry call site instead of repeated `for` loops
-- teams that want to add backoff and jitter later without changing the entry-point shape
+- teams that want retry, fixed delay, backoff, and jitter behind one call-site shape
 - small packages or apps that want focused retry behavior without unrelated dependencies
 
 ## Weaker Fits
 
-- projects that need backoff, jitter, or retry predicates today
+- projects that need retry predicates today
 - systems that already require a broader resilience stack such as circuit breaking or rate limiting
 - sync-only code paths
 - packages that need broad platform coverage below iOS 17 or macOS 14 right now
@@ -97,6 +103,8 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - `.maxAttempts(_:)` controls the total number of attempts, not retries-after-the-first
 - values below `1` are clamped to `1`
 - `.delay(_:)` configures a fixed delay between failed attempts and defaults to `.zero`
+- `.exponentialBackoff(baseDelay:multiplier:maxDelay:jitter:)` configures growing retry delays
+- `RetryJitter.fraction(_:)` applies bounded randomness to reduce synchronized retries
 - the first attempt always starts immediately
 - delay is applied only between eligible retries, never after the final failed attempt
 - cancellation before the first attempt prevents the operation from running
@@ -104,7 +112,7 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - cancellation during delay is rethrown and no later attempt runs
 - all non-cancellation thrown errors are retried until attempts are exhausted
 
-Backoff, jitter, and retry predicates are intentionally deferred to later releases.
+Retry predicates are intentionally deferred to later releases.
 
 ## Documentation
 
@@ -121,6 +129,8 @@ Current coverage verifies:
 - first-attempt success
 - retry-until-success behavior
 - fixed delay between failed attempts
+- exponential backoff progression
+- bounded jitter behavior
 - no trailing delay after the final failed attempt
 - exact call count on persistent failure
 - clamp behavior for invalid attempt counts

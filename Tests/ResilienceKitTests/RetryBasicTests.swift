@@ -140,6 +140,34 @@ func runAppliesConfiguredDelayBeforeRetryingUntilSuccess() async throws {
 }
 
 @Test
+func runAppliesExponentialBackoffBeforeRetryingUntilSuccess() async throws {
+    let counter = Counter()
+    let clock = ContinuousClock()
+    let start = clock.now
+
+    let result = try await Retry {
+        let attempt = await counter.increment()
+        if attempt < 3 {
+            throw SampleError.transient
+        }
+
+        return 8
+    }
+    .maxAttempts(3)
+    .exponentialBackoff(
+        baseDelay: .milliseconds(100),
+        multiplier: 2
+    )
+    .run()
+
+    let elapsed = start.duration(to: clock.now)
+
+    #expect(result == 8)
+    #expect(await counter.currentValue() == 3)
+    #expect(elapsed >= .milliseconds(250))
+}
+
+@Test
 func runInvokesOperationExactlyConfiguredNumberOfTimesOnPersistentFailure() async throws {
     let counter = Counter()
 

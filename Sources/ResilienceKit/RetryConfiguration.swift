@@ -9,28 +9,55 @@
 
 package struct RetryConfiguration: Sendable, Equatable {
     package let maxAttempts: Int
-    package let delay: Duration
+    package let delayStrategy: RetryDelayStrategy
 
     package init() {
-        self.init(storedMaxAttempts: 1, storedDelay: .zero)
+        self.init(storedMaxAttempts: 1, delayStrategy: .fixed(.zero))
+    }
+
+    package var delay: Duration {
+        delay(afterFailedAttempt: 1)
     }
 
     package func updatingMaxAttempts(_ value: Int) -> Self {
         Self(
             storedMaxAttempts: max(1, value),
-            storedDelay: delay
+            delayStrategy: delayStrategy
         )
     }
 
     package func updatingDelay(_ value: Duration) -> Self {
         Self(
             storedMaxAttempts: maxAttempts,
-            storedDelay: max(.zero, value)
+            delayStrategy: .fixed(max(.zero, value))
         )
     }
 
-    private init(storedMaxAttempts: Int, storedDelay: Duration) {
+    package func updatingExponentialBackoff(
+        baseDelay: Duration,
+        multiplier: Double,
+        maxDelay: Duration?,
+        jitter: RetryJitter
+    ) -> Self {
+        Self(
+            storedMaxAttempts: maxAttempts,
+            delayStrategy: .exponentialBackoff(
+                ExponentialBackoffConfiguration(
+                    baseDelay: baseDelay,
+                    multiplier: multiplier,
+                    maxDelay: maxDelay,
+                    jitter: jitter
+                )
+            )
+        )
+    }
+
+    package func delay(afterFailedAttempt attempt: Int) -> Duration {
+        delayStrategy.delay(afterFailedAttempt: attempt)
+    }
+
+    private init(storedMaxAttempts: Int, delayStrategy: RetryDelayStrategy) {
         self.maxAttempts = storedMaxAttempts
-        self.delay = storedDelay
+        self.delayStrategy = delayStrategy
     }
 }

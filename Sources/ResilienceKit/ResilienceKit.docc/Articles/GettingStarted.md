@@ -44,9 +44,27 @@ let result = try await Retry {
 
 `delay(_:)` sets a fixed delay between failed attempts. The first attempt still starts immediately.
 
+## Add exponential backoff
+
+```swift
+let result = try await Retry {
+    try await fetchProfile()
+}
+.maxAttempts(4)
+.exponentialBackoff(
+    baseDelay: .milliseconds(250),
+    multiplier: 2,
+    maxDelay: .seconds(5),
+    jitter: .fraction(0.2)
+)
+.run()
+```
+
+Exponential backoff grows the delay after each failed attempt. Jitter adds bounded randomness so many clients do not retry at the same time.
+
 ## Failure behavior
 
-In `0.2.1`, retry timing works like this:
+In `0.3.0`, retry timing works like this:
 
 - if an attempt succeeds, `run()` returns that value immediately
 - if an attempt fails and another attempt remains, `run()` waits for the configured delay before retrying
@@ -55,9 +73,9 @@ In `0.2.1`, retry timing works like this:
 - if the work throws `CancellationError`, `run()` rethrows it without retrying
 - if the task is cancelled during delay, `run()` rethrows `CancellationError`
 - no additional attempt runs after cancellation
-- backoff, jitter, and retry predicates are intentionally deferred to later releases
+- retry predicates are intentionally deferred to later releases
 
 ## Next steps
 
 - Use the README in the repository root for package-level fit guidance and installation.
-- Future releases will layer in delay, backoff, and jitter policies without changing the core `Retry { ... }` entry point.
+- Future releases will layer in retry predicates without changing the core `Retry { ... }` entry point.

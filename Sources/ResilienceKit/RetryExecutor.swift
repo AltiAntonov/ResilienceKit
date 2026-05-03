@@ -26,8 +26,10 @@ package struct RetryExecutor: Sendable {
                     throw error
                 }
 
-                if configuration.delay > .zero {
-                    try await Task.sleep(for: configuration.delay)
+                let delay = configuration.delay(afterFailedAttempt: attempt)
+
+                if delay > .zero {
+                    try await Task.sleep(for: delay)
                 }
             }
         }

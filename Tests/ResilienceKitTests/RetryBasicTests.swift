@@ -28,6 +28,11 @@ enum SampleError: Error, Equatable {
     case permanent
 }
 
+enum SelectiveRetryError: Error, Equatable {
+    case retryable
+    case notRetryable
+}
+
 @Test
 func runReturnsSuccessfulValueOnFirstAttempt() async throws {
     let counter = Counter()
@@ -112,6 +117,84 @@ func runRetriesUntilOperationSucceeds() async throws {
 
     #expect(result == 99)
     #expect(await counter.currentValue() == 3)
+}
+
+@Test
+func runRetriesErrorsMatchingRetryConditionUntilSuccess() async throws {
+    let counter = Counter()
+
+    let result = try await Retry {
+        let attempt = await counter.increment()
+        if attempt < 3 {
+            throw SelectiveRetryError.retryable
+        }
+
+        return 100
+    }
+    .maxAttempts(5)
+    .retry { error in
+        error as? SelectiveRetryError == .retryable
+    }
+    .run()
+
+    #expect(result == 100)
+    #expect(await counter.currentValue() == 3)
+}
+
+@Test
+func runThrowsNonRetryableErrorWithoutRetrying() async throws {
+    let counter = Counter()
+
+    do {
+        _ = try await Retry {
+            _ = await counter.increment()
+            throw SelectiveRetryError.notRetryable
+        }
+        .maxAttempts(5)
+        .retry { error in
+            error as? SelectiveRetryError == .retryable
+        }
+        .run()
+
+        Issue.record("Expected Retry.run() to throw non-retryable error immediately")
+    } catch let error as SelectiveRetryError {
+        #expect(error == .notRetryable)
+    } catch {
+        Issue.record("Expected SelectiveRetryError, got \(error)")
+    }
+
+    #expect(await counter.currentValue() == 1)
+}
+
+@Test
+func runSkipsConfiguredDelayForNonRetryableError() async throws {
+    let counter = Counter()
+    let clock = ContinuousClock()
+    let start = clock.now
+
+    do {
+        _ = try await Retry {
+            _ = await counter.increment()
+            throw SelectiveRetryError.notRetryable
+        }
+        .maxAttempts(5)
+        .delay(.milliseconds(250))
+        .retry { error in
+            error as? SelectiveRetryError == .retryable
+        }
+        .run()
+
+        Issue.record("Expected Retry.run() to throw non-retryable error immediately")
+    } catch let error as SelectiveRetryError {
+        #expect(error == .notRetryable)
+    } catch {
+        Issue.record("Expected SelectiveRetryError, got \(error)")
+    }
+
+    let elapsed = start.duration(to: clock.now)
+
+    #expect(await counter.currentValue() == 1)
+    #expect(elapsed < .milliseconds(150))
 }
 
 @Test

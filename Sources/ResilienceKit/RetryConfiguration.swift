@@ -7,12 +7,17 @@
 //  Licensed under the MIT License. See LICENSE for details.
 //
 
-package struct RetryConfiguration: Sendable, Equatable {
+package struct RetryConfiguration: Sendable {
     package let maxAttempts: Int
     package let delayStrategy: RetryDelayStrategy
+    package let retryCondition: @Sendable (Error) -> Bool
 
     package init() {
-        self.init(storedMaxAttempts: 1, delayStrategy: .fixed(.zero))
+        self.init(
+            storedMaxAttempts: 1,
+            delayStrategy: .fixed(.zero),
+            retryCondition: { _ in true }
+        )
     }
 
     package var delay: Duration {
@@ -22,14 +27,16 @@ package struct RetryConfiguration: Sendable, Equatable {
     package func updatingMaxAttempts(_ value: Int) -> Self {
         Self(
             storedMaxAttempts: max(1, value),
-            delayStrategy: delayStrategy
+            delayStrategy: delayStrategy,
+            retryCondition: retryCondition
         )
     }
 
     package func updatingDelay(_ value: Duration) -> Self {
         Self(
             storedMaxAttempts: maxAttempts,
-            delayStrategy: .fixed(max(.zero, value))
+            delayStrategy: .fixed(max(.zero, value)),
+            retryCondition: retryCondition
         )
     }
 
@@ -48,7 +55,8 @@ package struct RetryConfiguration: Sendable, Equatable {
                     maxDelay: maxDelay,
                     jitter: jitter
                 )
-            )
+            ),
+            retryCondition: retryCondition
         )
     }
 
@@ -56,8 +64,27 @@ package struct RetryConfiguration: Sendable, Equatable {
         delayStrategy.delay(afterFailedAttempt: attempt)
     }
 
-    private init(storedMaxAttempts: Int, delayStrategy: RetryDelayStrategy) {
+    package func updatingRetryCondition(
+        _ condition: @escaping @Sendable (Error) -> Bool
+    ) -> Self {
+        Self(
+            storedMaxAttempts: maxAttempts,
+            delayStrategy: delayStrategy,
+            retryCondition: condition
+        )
+    }
+
+    package func shouldRetry(_ error: Error) -> Bool {
+        retryCondition(error)
+    }
+
+    private init(
+        storedMaxAttempts: Int,
+        delayStrategy: RetryDelayStrategy,
+        retryCondition: @escaping @Sendable (Error) -> Bool
+    ) {
         self.maxAttempts = storedMaxAttempts
         self.delayStrategy = delayStrategy
+        self.retryCondition = retryCondition
     }
 }

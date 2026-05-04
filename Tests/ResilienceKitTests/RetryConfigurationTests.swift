@@ -10,6 +10,11 @@
 import Testing
 @testable import ResilienceKit
 
+enum ConfigurationSampleError: Error {
+    case retryable
+    case notRetryable
+}
+
 @Test
 func retryConfigurationDefaultsToOneAttempt() {
     let configuration = RetryConfiguration()
@@ -32,6 +37,22 @@ func retryMaxAttemptsReturnsANewRetryWithoutMutatingTheOriginal() {
     #expect(original.configuration.maxAttempts == 1)
     #expect(updated.configuration.maxAttempts == 3)
     #expect(original.configuration.maxAttempts == 1)
+}
+
+@Test
+func retryConditionReturnsANewRetryWithoutMutatingTheOriginal() {
+    let original = Retry<Int> { 1 }
+    let updated = original.retry { error in
+        guard let error = error as? ConfigurationSampleError else {
+            return false
+        }
+
+        return error == .retryable
+    }
+
+    #expect(original.configuration.shouldRetry(ConfigurationSampleError.notRetryable))
+    #expect(updated.configuration.shouldRetry(ConfigurationSampleError.retryable))
+    #expect(!updated.configuration.shouldRetry(ConfigurationSampleError.notRetryable))
 }
 
 @Test

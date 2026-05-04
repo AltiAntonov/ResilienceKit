@@ -30,6 +30,7 @@
 - explicit `.maxAttempts(_:)` configuration
 - fixed delay support through `.delay(_:)`
 - exponential backoff and bounded jitter
+- retry predicates through `.retry { ... }`
 - terminal cancellation that is not retried
 - small surface area intended to grow in layers
 
@@ -43,7 +44,7 @@ Add `ResilienceKit` to your Swift Package Manager dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.3.0")
+    .package(url: "https://github.com/AltiAntonov/ResilienceKit.git", from: "0.4.0")
 ]
 ```
 
@@ -73,6 +74,9 @@ let value = try await Retry {
     maxDelay: .seconds(5),
     jitter: .fraction(0.2)
 )
+.retry { error in
+    error is URLError
+}
 .run()
 ```
 
@@ -89,11 +93,12 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - app and SDK code that wraps async network requests
 - codebases that want one obvious retry call site instead of repeated `for` loops
 - teams that want retry, fixed delay, backoff, and jitter behind one call-site shape
+- code that needs to retry transient errors while failing fast on permanent errors
 - small packages or apps that want focused retry behavior without unrelated dependencies
 
 ## Weaker Fits
 
-- projects that need retry predicates today
+- projects that need HTTP-specific retry helpers today
 - systems that already require a broader resilience stack such as circuit breaking or rate limiting
 - sync-only code paths
 - packages that need broad platform coverage below iOS 17 or macOS 14 right now
@@ -105,14 +110,16 @@ It is a strong fit when the first thing you need is a small retry primitive, not
 - `.delay(_:)` configures a fixed delay between failed attempts and defaults to `.zero`
 - `.exponentialBackoff(baseDelay:multiplier:maxDelay:jitter:)` configures growing retry delays
 - `RetryJitter.fraction(_:)` applies bounded randomness to reduce synchronized retries
+- `.retry { ... }` decides whether a non-cancellation error is retryable
 - the first attempt always starts immediately
 - delay is applied only between eligible retries, never after the final failed attempt
+- non-retryable errors are thrown immediately without delay or another attempt
 - cancellation before the first attempt prevents the operation from running
 - `CancellationError` is terminal and is rethrown without additional attempts
 - cancellation during delay is rethrown and no later attempt runs
 - all non-cancellation thrown errors are retried until attempts are exhausted
 
-Retry predicates are intentionally deferred to later releases.
+HTTP-specific retry helpers are intentionally deferred to later releases.
 
 ## Documentation
 
@@ -131,6 +138,8 @@ Current coverage verifies:
 - fixed delay between failed attempts
 - exponential backoff progression
 - bounded jitter behavior
+- selective retry behavior
+- fail-fast behavior for non-retryable errors
 - no trailing delay after the final failed attempt
 - exact call count on persistent failure
 - clamp behavior for invalid attempt counts

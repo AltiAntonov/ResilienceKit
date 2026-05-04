@@ -62,20 +62,36 @@ let result = try await Retry {
 
 Exponential backoff grows the delay after each failed attempt. Jitter adds bounded randomness so many clients do not retry at the same time.
 
+## Retry selected errors
+
+```swift
+let result = try await Retry {
+    try await fetchProfile()
+}
+.maxAttempts(4)
+.retry { error in
+    error is URLError
+}
+.run()
+```
+
+By default, `Retry` retries all non-cancellation errors. Use `retry(_:)` to fail fast for errors that should not be retried.
+
 ## Failure behavior
 
-In `0.3.0`, retry timing works like this:
+In `0.4.0`, retry timing works like this:
 
 - if an attempt succeeds, `run()` returns that value immediately
 - if an attempt fails and another attempt remains, `run()` waits for the configured delay before retrying
+- if the retry predicate returns `false`, `run()` throws immediately without delay
 - if all attempts fail, `run()` throws the final error without an extra trailing delay
 - if the task is cancelled before the first attempt, the operation is not run
 - if the work throws `CancellationError`, `run()` rethrows it without retrying
 - if the task is cancelled during delay, `run()` rethrows `CancellationError`
 - no additional attempt runs after cancellation
-- retry predicates are intentionally deferred to later releases
+- HTTP-specific retry helpers are intentionally deferred to later releases
 
 ## Next steps
 
 - Use the README in the repository root for package-level fit guidance and installation.
-- Future releases will layer in retry predicates without changing the core `Retry { ... }` entry point.
+- Future releases will layer in ergonomic presets without changing the core `Retry { ... }` entry point.

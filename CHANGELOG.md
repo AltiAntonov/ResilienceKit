@@ -2,6 +2,13 @@
 
 All notable changes to `ResilienceKit` will be documented in this file.
 
+## 0.4.0
+
+- Added `.retry(_:)` for generic error-based retry predicates
+- Preserved default behavior of retrying all non-cancellation errors
+- Added fail-fast behavior for non-retryable errors
+- Added tests and documentation for selective retry behavior
+
 ## 0.3.0
 
 - Added `.exponentialBackoff(baseDelay:multiplier:maxDelay:jitter:)`

@@ -22,6 +22,10 @@ package struct RetryExecutor: Sendable {
             } catch is CancellationError {
                 throw CancellationError()
             } catch {
+                guard configuration.shouldRetry(error) else {
+                    throw error
+                }
+
                 if attempt == configuration.maxAttempts {
                     throw error
                 }

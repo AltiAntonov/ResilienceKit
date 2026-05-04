@@ -13,9 +13,10 @@ The current package intentionally keeps the surface area small:
 - fixed delay between failed attempts through ``Retry/delay(_:)``
 - exponential backoff through ``Retry/exponentialBackoff(baseDelay:multiplier:maxDelay:jitter:)``
 - bounded jitter through ``RetryJitter``
+- generic retry predicates through ``Retry/retry(_:)``
 - terminal cancellation before execution, during delay, or from the operation itself
 
-`ResilienceKit` is a good fit when you want a compact retry primitive with fixed delay, exponential backoff, and jitter without pulling in a broader resilience framework.
+`ResilienceKit` is a good fit when you want a compact retry primitive with fixed delay, exponential backoff, jitter, and selective retry without pulling in a broader resilience framework.
 
 ## Topics
 

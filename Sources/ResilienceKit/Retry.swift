@@ -64,6 +64,16 @@ public struct Retry<Output>: Sendable {
         )
     }
 
+    /// Sets the condition that decides whether a non-cancellation error is retried.
+    public func retry(
+        _ condition: @escaping @Sendable (Error) -> Bool
+    ) -> Self {
+        return Self(
+            operation: operation,
+            configuration: configuration.updatingRetryCondition(condition)
+        )
+    }
+
     /// Runs the wrapped operation using the current retry configuration.
     ///
     /// Cancellation is terminal. If `delay(_:)` is configured, cancellation
